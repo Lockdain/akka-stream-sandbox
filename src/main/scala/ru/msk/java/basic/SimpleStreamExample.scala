@@ -1,12 +1,8 @@
-package ru.msk.java
+package ru.msk.java.basic
 
-import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Flow, Sink, Source}
-
-import scala.concurrent.Future
-
+import akka.stream.scaladsl.{Flow, Source}
 
 object SimpleStreamExample {
 
@@ -16,7 +12,7 @@ object SimpleStreamExample {
 
     val numbers = 1 to 1000
 
-    // Create a Source which iterates over the number sequence
+   /* // Create a Source which iterates over the number sequence
     val numberSource: Source[Int, NotUsed] = Source.fromIterator(() => numbers.iterator)
 
     // Only let even numbers to pass through the flow
@@ -29,7 +25,23 @@ object SimpleStreamExample {
     val consoleSink: Sink[Int, Future[Done]] = Sink.foreach[Int](println)
 
     // Connect the source with the sink
-    evenNumbersSource.runWith(consoleSink)
+    evenNumbersSource.runWith(consoleSink)*/
+
+    // Wiring all together
+    Source.fromIterator(() =>
+      numbers.iterator
+    )
+      .via(Flow[Int].filter(num =>
+        num % 2 == 0
+      ))
+      .via(Flow[Int]
+        .map( _ * 2)
+        .limit(15)
+      )
+      .runForeach(println)
+      /*.runWith(Sink.foreach(
+        println
+      ))*/
   }
 
 }
