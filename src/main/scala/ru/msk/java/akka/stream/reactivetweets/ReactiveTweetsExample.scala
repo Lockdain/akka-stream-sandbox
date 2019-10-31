@@ -1,30 +1,32 @@
-package ru.msk.java.basic
+package ru.msk.java.akka.stream.reactivetweets
 
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.scaladsl.Source
 
-object TweetStream {
+object ReactiveTweetsExample {
+
+  final case class Author(handle: String)
+
+  final case class Hashtag(name: String)
+
+  final case class Tweet(author: Author, timestamp: Long, body: String) {
+    def hashtags: Set[Hashtag] =
+      body
+        .split(" ")
+        .collect {
+          case t if t.startsWith("#") => Hashtag(t.replaceAll("[^#\\W]", ""))
+        }
+        .toSet
+  }
+
+  val akkaTag = Hashtag("#akka")
 
   def main(args: Array[String]): Unit = {
 
-
-    final case class Author(handle: String)
-
-    final case class Hashtag(name: String)
-
-    final case class Tweet(author: Author, timestamp: Long, body: String) {
-      def hashtags: Set[Hashtag] =
-        body
-          .split(" ")
-          .collect {
-            case t if t.startsWith("#") => Hashtag(t.replaceAll("[^#\\w]", ""))
-          }
-          .toSet
-    }
-
-    val akkaTag = Hashtag("#akka")
+    implicit val system = ActorSystem("reactive-tweets")
+    implicit val materializer = ActorMaterializer()
 
     val tweets: Source[Tweet, NotUsed] = Source(
       Tweet(Author("rolandkuhn"), System.currentTimeMillis, "#akka rocks!") ::
@@ -40,15 +42,11 @@ object TweetStream {
         Nil
     )
 
-    implicit val system = ActorSystem("reactive-tweets")
-    implicit val materializer = ActorMaterializer()
+    val authors: Source[Author, NotUsed] =
+      tweets
+        .filter(_.body.contains("#akka"))
+        .map(_.author)
 
-    tweets
-      .map(_.hashtags)
-      .reduce(_ ++ _)
-      .mapConcat(identity)
-      .map(_.name.toUpperCase())
-      .runWith(Sink.foreach(println))
-
+    authors.runForeach(println)
   }
 }

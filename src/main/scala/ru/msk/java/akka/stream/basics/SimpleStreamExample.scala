@@ -1,4 +1,4 @@
-package ru.msk.java.basic
+package ru.msk.java.akka.stream.basics
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer

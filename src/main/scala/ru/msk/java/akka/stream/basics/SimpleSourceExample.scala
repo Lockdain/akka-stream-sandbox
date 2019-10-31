@@ -1,4 +1,4 @@
-package ru.msk.java.basic
+package ru.msk.java.akka.stream.basics
 
 import java.nio.file.Paths
 
